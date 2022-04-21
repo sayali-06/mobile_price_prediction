@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head xmlns="http://www.w3.org/1999/xhtml">
+    <meta charset="UTF-8">
+    <title>Mobile Price Predictor</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+
+</head>
+<body class="bg-dark">
+
+<div class="container">
+    <div class="row">
+        <div class="card mt-50" style="width: 100%; height: 100%">
+            <div class="card-header" style="text-align: center">
+                <h1>Welcome to Mobile Price Predictor</h1>
+            </div>
+            <div class="card-body">
+                <br>
+                <form method="post" action="http://localhost:5000/predict" accept-charset="utf-8" name="Modelform">
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select the ram:</b> </label><br>
+                        <select class="selectpicker form-control" id="ram" name="ram" required="1">
+                               
+                            {% for ram in ram %}
+                            <option value="{{ ram }}">{{ ram }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select the rom:</b> </label><br>
+                        <select class="selectpicker form-control" id="rom" name="rom" required="1">
+                            {% for rom in rom %} 
+                            <option value="{{ rom }}">{{ rom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select Mobile Size</b> </label><br>
+                        <select class="selectpicker form-control" id="mobile_size" name="mobile_size" required="1">
+                            {% for mobile_size in mobile_size %}
+                            <option value="{{ mobile_size }}">{{ mobile_size }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select Primary Camera</b> </label><br>
+                        <select class="selectpicker form-control" id="primary_cam" name="primary_cam" required="1">
+                            {% for primary_cam in primary_cam %}
+                            <option value="{{ primary_cam }}">{{ primary_cam }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select Selfi Camera</b> </label><br>
+                        <select class="selectpicker form-control" id="selfi_cam" name="selfi_cam" required="1">
+                            {% for selfi_cam in selfi_cam %}
+                            <option value="{{ selfi_cam }}">{{ selfi_cam }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select Battery Power </b> </label><br>
+                        <select class="selectpicker form-control" id="battery_power" name="battery_power" required="1">
+                            {% for battery_power in battery_power %}
+                            <option value="{{ battery_power }}">{{ battery_power }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <label><b>Select Ratings</b> </label><br>
+                        <select class="selectpicker form-control" id="ratings" name="ratings" required="1">
+                            {% for ratings in ratings %}
+                            <option value="{{ ratings }}">{{ ratings }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                   
+                   
+                    <div class="col-md-10 form-group" style="text-align: center">
+                        <button  class="btn btn-primary form-control" onclick="send_data()">Predict Price</button>
+                    </div>
+                </form>
+                <br>
+                <div class="row">
+                    <div class="col-12" style="text-align: center">
+                        <h4><span id="prediction"></span></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    function load_mob_models(ram_id,car_model_id)
+    {
+        var ram=document.getElementById(ram_id);
+        var car_model= document.getElementById(car_model_id);
+        console.log(ram.value);
+        car_model.value="";
+        car_model.innerHTML="";
+        for (ram in companies)
+        {
+            if( ram.value == "{{ ram }}")
+            {
+                for (model in pixel)
+                    { if (ram in model)
+                        {
+                        var newOption= document.createElement("option");
+                        newOption.value="{{ model }}";
+                        newOption.innerHTML="{{ model }}";
+                        car_model.options.add(newOption);
+                        }
+                
+                    }
+        
+            }
+        }
+    }
+
+    function form_handler(event) {
+        event.preventDefault(); // Don't submit the form normally
+    }
+    function send_data()
+    {
+        document.querySelector('form').addEventListener("submit",form_handler);
+
+        var fd=new FormData(document.querySelector('form'));
+
+        var xhr= new XMLHttpRequest({mozSystem: true});
+
+        xhr.open('POST','/predict',true);
+        document.getElementById('prediction').innerHTML="Wait! Predicting Price.....";
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState == XMLHttpRequest.DONE){
+                document.getElementById('prediction').innerHTML="Prediction: ₹"+xhr.responseText;
+
+            }
+        };
+
+        xhr.onload= function(){};
+
+        xhr.send(fd);
+    }
+</script>
+
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+</body>
+</html>
